@@ -1,0 +1,32 @@
+
+#include <stdio.h>
+#include <string.h>
+
+// Banking encryption function
+void encrypt_data(char data[])
+{
+    int i;
+
+    for (i = 0; data[i] != '\0'; i++)
+    {
+        data[i] = data[i] + 3;
+    }
+}
+
+int main()
+{
+    char customer_data[100] = "BANK12345";
+
+    printf("BANKING APPLICATION\n");
+    printf("----------------------------\n");
+
+    printf("Original Customer Data: BANK12345\n");
+
+    encrypt_data(customer_data);
+
+    printf("Encrypted Customer Data: %s\n", customer_data);
+
+    printf("Transaction Status: Successful\n");
+
+    return 0;
+}
