@@ -1,0 +1,173 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#endif
+
+#define MEMORY_SIZE (64 * 1024)
+#define PAGE_SIZE 4096
+#define FRAMES 4
+#define REF_SIZE 15
+
+volatile unsigned char memory[MEMORY_SIZE];
+
+// Memory locking function
+int lock_memory()
+{
+#ifdef _WIN32
+    return VirtualLock((LPVOID)memory, MEMORY_SIZE);
+#else
+    return mlock((const void *)memory, MEMORY_SIZE) == 0;
+#endif
+}
+
+// Memory unlocking function
+void unlock_memory()
+{
+#ifdef _WIN32
+    VirtualUnlock((LPVOID)memory, MEMORY_SIZE);
+#else
+    munlock((const void *)memory, MEMORY_SIZE);
+#endif
+}
+
+// Measure maximum execution delay
+double measure_delay()
+{
+    int i, j;
+    clock_t start, end;
+    double delay, max_delay = 0;
+
+    for (i = 0; i < 100; i++)
+    {
+        start = clock();
+
+        for (j = 0; j < MEMORY_SIZE; j += PAGE_SIZE)
+        {
+            memory[j]++;
+        }
+
+        end = clock();
+
+        delay = ((double)(end - start) * 1000) / CLOCKS_PER_SEC;
+
+        if (delay > max_delay)
+            max_delay = delay;
+    }
+
+    return max_delay;
+}
+
+// FIFO page replacement simulation
+int fifo(int ref[], int n)
+{
+    int frames[FRAMES];
+    int count = 0, faults = 0;
+    int next = 0, i, j, found;
+
+    for (i = 0; i < n; i++)
+    {
+        found = 0;
+
+        for (j = 0; j < count; j++)
+        {
+            if (frames[j] == ref[i])
+            {
+                found = 1;
+                break;
+            }
+        }
+
+        if (found)
+            continue;
+
+        faults++;
+
+        if (count < FRAMES)
+        {
+            frames[count++] = ref[i];
+        }
+        else
+        {
+            frames[next] = ref[i];
+            next = (next + 1) % FRAMES;
+        }
+    }
+
+    return faults;
+}
+
+int main()
+{
+    int ref[REF_SIZE] = {
+        1, 2, 3, 4, 1,
+        2, 5, 1, 2, 3,
+        4, 5, 1, 2, 3
+    };
+
+    int locked;
+    double without_lock, with_lock;
+    int faults;
+
+    printf("MEMORY MANAGEMENT PLAN\n");
+    printf("----------------------------\n");
+
+    printf("Memory allocated: 64 KB\n");
+    printf("Page size: 4 KB\n");
+
+    // Experiment without memory locking
+    printf("\n1. WITHOUT MEMORY LOCKING\n");
+
+    without_lock = measure_delay();
+
+    printf("Maximum measured delay: %.3f ms\n",
+           without_lock);
+
+    // Experiment with memory locking
+    printf("\n2. WITH MEMORY LOCKING\n");
+
+    locked = lock_memory();
+
+    if (locked)
+    {
+        printf("Memory locked successfully.\n");
+
+        with_lock = measure_delay();
+
+        printf("Maximum measured delay: %.3f ms\n",
+               with_lock);
+
+        unlock_memory();
+
+        printf("Memory unlocked successfully.\n");
+    }
+    else
+    {
+        printf("Memory locking failed.\n");
+        printf("Check system permissions or memory limits.\n");
+    }
+
+    // Page replacement simulation
+    printf("\n3. PAGE REPLACEMENT SIMULATION\n");
+
+    faults = fifo(ref, REF_SIZE);
+
+    printf("Number of frames: %d\n", FRAMES);
+    printf("Number of references: %d\n", REF_SIZE);
+    printf("Total page faults: %d\n", faults);
+
+    printf("\n4. TASK MEMORY REQUIREMENTS\n");
+
+    printf("Real-time control task: 64 KB locked memory\n");
+    printf("Machine learning task: 1.5 GB memory requirement\n");
+    printf("Logging task: Uses additional available memory\n");
+
+    printf("\nMemory Management Experiment Completed.\n");
+
+    return 0;
+}
