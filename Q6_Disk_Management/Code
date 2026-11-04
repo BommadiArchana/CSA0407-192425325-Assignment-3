@@ -1,0 +1,40 @@
+
+#include <stdio.h>
+
+int main()
+{
+    int disks = 6;
+    float disk_size = 4.0;
+
+    float raid0, raid1, raid5, raid10;
+
+    printf("DISK MANAGEMENT - RAID CAPACITY CALCULATION\n");
+    printf("--------------------------------------------\n");
+
+    printf("Number of Disks: %d\n", disks);
+    printf("Capacity of Each Disk: %.1f TB\n", disk_size);
+
+    // RAID 0: Striping
+    raid0 = disks * disk_size;
+
+    // RAID 1: Three mirrored pairs
+    raid1 = (disks / 2) * disk_size;
+
+    // RAID 5: One disk equivalent for parity
+    raid5 = (disks - 1) * disk_size;
+
+    // RAID 10: Mirroring and striping
+    raid10 = (disks / 2) * disk_size;
+
+    printf("\nRAID USABLE CAPACITY\n");
+    printf("----------------------------\n");
+
+    printf("RAID 0  : %.1f TB\n", raid0);
+    printf("RAID 1  : %.1f TB\n", raid1);
+    printf("RAID 5  : %.1f TB\n", raid5);
+    printf("RAID 10 : %.1f TB\n", raid10);
+
+    printf("\nRAID Calculation Completed Successfully.\n");
+
+    return 0;
+}
