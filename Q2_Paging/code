@@ -1,0 +1,47 @@
+
+#include <stdio.h>
+
+#define PAGE_SIZE 1024
+#define PAGES 8
+
+// Page table: frame number or -1 if page is not in memory
+int page_table[PAGES] = {5, 2, -1, 7, 0, -1, 3, -1};
+
+int main()
+{
+    unsigned logical_addresses[] = {0, 1500, 3100, 6200, 9000, 2049};
+
+    int i;
+    unsigned address, page, offset, physical;
+
+    printf("PAGING ADDRESS TRANSLATION\n");
+    printf("----------------------------\n");
+
+    for (i = 0; i < 6; i++)
+    {
+        address = logical_addresses[i];
+
+        page = address / PAGE_SIZE;
+        offset = address % PAGE_SIZE;
+
+        printf("Logical Address: %u -> ", address);
+
+        if (page >= PAGES)
+        {
+            printf("Invalid address\n");
+        }
+        else if (page_table[page] == -1)
+        {
+            printf("Page Fault\n");
+        }
+        else
+        {
+            physical = page_table[page] * PAGE_SIZE + offset;
+
+            printf("Page: %u, Offset: %u, Physical Address: %u\n",
+                   page, offset, physical);
+        }
+    }
+
+    return 0;
+}
